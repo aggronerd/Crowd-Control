@@ -1,4 +1,4 @@
-from libpanda import NodePath, PandaNode, LightRampAttrib, OrthographicLens, GeomNode, GeomVertexData, GeomVertexFormat, Geom, GeomVertexWriter, GeomTriangles, TextureStage, TransparencyAttrib
+from libpanda import NodePath, PandaNode, LightRampAttrib, OrthographicLens, GeomNode, GeomVertexData, GeomVertexFormat, Geom, GeomVertexWriter, GeomTriangles, TextureStage, TransparencyAttrib, PointLight, Spotlight, PerspectiveLens
 from direct.filter.CommonFilters import CommonFilters
 
 __author__ = 'greg'
@@ -98,21 +98,28 @@ class MyApp(ShowBase):
 		texture = self.loader.loadTexture('artwork/sample.png')
 		#node.setTwoSided(True)
 		ts = TextureStage('ts')
-		ts.setMode(TextureStage.MReplace)
+		#ts.setMode(TextureStage.MNormal)
 		node1.setTexture(ts, texture, 1)
 		node2.setTexture(ts, texture, 1)
 
 		myMaterial = Material()
-		myMaterial.setShininess(5.0) #Make this material shiny
-		myMaterial.setAmbient(VBase4(0,0,1,1)) #Make this material blue
+		myMaterial.setShininess(0.0) #Make this material shiny
+		myMaterial.setAmbient(VBase4(0.0,0.0,0.0,1)) #Make this material blue
 		node1.setMaterial(myMaterial)
 		node2.setMaterial(myMaterial)
 
 		self.camera.setPos(0, 0, 2)
 		self.camera.setHpr(0, -95, 0)
 
+		plight = PointLight('plight')
+		plight.setColor(VBase4(0.8, 0.8, 0.2, 1))
+		plnp = self.render.attachNewNode(plight)
+		plnp.setPos(0.128, 0.064, -0.8)
+		plight.setAttenuation(Point3(0.23, 0.23, 0.25))
+		self.render.setLight(plnp)
+
 		self.alight = self.render.attachNewNode(AmbientLight("Ambient"))
-		self.alight.node().setColor(Vec4(0.0, 0.0, 0.5, 1))
+		self.alight.node().setColor(Vec4(0.1, 0.1, 0.1, 1))
 		self.render.setLight(self.alight)
 
 		self.render.setShaderAuto()
