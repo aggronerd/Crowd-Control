@@ -1,4 +1,4 @@
-from libpanda import NodePath, PandaNode, LightRampAttrib, OrthographicLens, GeomNode, GeomVertexData, GeomVertexFormat, Geom, GeomVertexWriter, GeomTriangles, TextureStage
+from libpanda import NodePath, PandaNode, LightRampAttrib, OrthographicLens, GeomNode, GeomVertexData, GeomVertexFormat, Geom, GeomVertexWriter, GeomTriangles, TextureStage, TransparencyAttrib
 from direct.filter.CommonFilters import CommonFilters
 
 __author__ = 'greg'
@@ -7,16 +7,17 @@ from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from actors import Person
 from panda3d.core import loadPrcFile, Point2D, Point3, DirectionalLight, Vec3, AmbientLight, Vec4, Material, VBase4
-from pandac.PandaModules import AntialiasAttrib
+from pandac.PandaModules import AntialiasAttrib, TransparencyAttrib
 from direct.gui.OnscreenText import OnscreenText
 import environment
 import sys
 
 class Tile(GeomNode):
 
-	def __init__(self, name, left = 0.0, bottom = 0.0):
+	def __init__(self, name, left, bottom, z = -1):
 			self.left = left
 			self.bottom = bottom
+			self.z = z
 			GeomNode.__init__(self, name)
 			self.reconstruct()
 
@@ -31,24 +32,24 @@ class Tile(GeomNode):
 		texcoordW = GeomVertexWriter(self.vdata, 'texcoord')
 
 		#Add vertices to the primative
-		vertexW.addData3f(self.left, self.bottom, -1)
+		vertexW.addData3f(self.left, self.bottom, self.z)
 		normalW.addData3f(0,0,1)
-		colorW.addData4f(1.0,1.0,0.0,1.0)
+		colorW.addData4f(1.0,1.0,0.0,0.0)
 		texcoordW.addData2f(0.0, 0.0)
 
-		vertexW.addData3f(self.left, self.bottom + 0.064, -1)
+		vertexW.addData3f(self.left, self.bottom + 0.064, self.z)
 		normalW.addData3f(0,0,1)
-		colorW.addData4f(1.0,1.0,0.0,1.0)
+		colorW.addData4f(1.0,1.0,0.0,0.0)
 		texcoordW.addData2f(0.0, 1.0)
 
-		vertexW.addData3f(self.left + 0.064, self.bottom + 0.064, -1)
+		vertexW.addData3f(self.left + 0.128, self.bottom + 0.064, self.z)
 		normalW.addData3f(0,0,1)
-		colorW.addData4f(1.0,1.0,0.0,1.0)
+		colorW.addData4f(1.0,1.0,0.0,0.0)
 		texcoordW.addData2f(1.0, 1.0)
 
-		vertexW.addData3f(self.left + 0.064, self.bottom, -1)
+		vertexW.addData3f(self.left + 0.128, self.bottom, self.z)
 		normalW.addData3f(0,0,1)
-		colorW.addData4f(1.0,1.0,0.0,1.0)
+		colorW.addData4f(1.0,1.0,0.0,0.0)
 		texcoordW.addData2f(1.0, 0.0)
 
 		self.geom = Geom(self.vdata)
@@ -75,7 +76,7 @@ class MyApp(ShowBase):
 
 		ShowBase.__init__(self)
 
-		self.camera = self.makeCamera(self.win, lens=OrthographicLens())
+		self.camera = self.makeCamera(self.win)
 
 		#self.render.setAntialias(AntialiasAttrib.MMultisample)
 		self.setBackgroundColor(0.0,0.0,0.0)
@@ -88,22 +89,27 @@ class MyApp(ShowBase):
 		self._setupKeyboardEvents()
 
 		# Load and transform the panda actor.
-		self.tile = Tile("tile",0.0,0.0)
-		node = self.render.attachNewNode(self.tile)
+		self.render.setTransparency(TransparencyAttrib.MAlpha)
+		self.tile1 = Tile("tile1",0.0,0.0)
+		node1 = self.render.attachNewNode(self.tile1)
+		self.tile2 = Tile("tile2",0.064,0.032)
+		node2 = self.render.attachNewNode(self.tile2)
 
 		texture = self.loader.loadTexture('artwork/sample.png')
 		#node.setTwoSided(True)
 		ts = TextureStage('ts')
 		ts.setMode(TextureStage.MReplace)
-		node.setTexture(ts, texture, 1)
+		node1.setTexture(ts, texture, 1)
+		node2.setTexture(ts, texture, 1)
 
 		myMaterial = Material()
 		myMaterial.setShininess(5.0) #Make this material shiny
 		myMaterial.setAmbient(VBase4(0,0,1,1)) #Make this material blue
-		node.setMaterial(myMaterial)
+		node1.setMaterial(myMaterial)
+		node2.setMaterial(myMaterial)
 
-		self.camera.setPos(0, 0, 0)
-		self.camera.setHpr(0, -90, 0)
+		self.camera.setPos(0, 0, 2)
+		self.camera.setHpr(0, -95, 0)
 
 		self.alight = self.render.attachNewNode(AmbientLight("Ambient"))
 		self.alight.node().setColor(Vec4(0.0, 0.0, 0.5, 1))
@@ -138,7 +144,7 @@ class MyApp(ShowBase):
 			self.posText.setText("Mouse: " + str(x) + "," + str(y))
 
 			#Set rate as 4.0 per second ensuring smooth scrolling
-			rate = 12.0*task.time
+			rate = 3.0*task.time
 
 			#Adjust position
 			if(y < -0.9):
@@ -151,7 +157,10 @@ class MyApp(ShowBase):
 				newPos.setX(newPos.getX() + (abs(x-0.9)/0.1) * rate)
 
 			#Adjust zoom
-			newPos.setZ(newPos.getZ() + (float(self.mouseWheelTicks)*2.0))
+			newZ = newPos.getZ() + (float(self.mouseWheelTicks)*0.01)
+			if newZ > 1.0 and newZ < 3.0:
+				newPos.setZ(newZ)
+
 			self.mouseWheelTicks = 0
 
 			self.camera.setPos(newPos)
