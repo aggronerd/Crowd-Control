@@ -1,0 +1,7 @@
+<tileset type="floor">
+    <image filename="artwork/city-floor.png" />
+    <tileType name="pavement">
+        <colliadable>false</colliadable>
+
+    </tileType>
+</tileset>

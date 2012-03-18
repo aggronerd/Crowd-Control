@@ -9,7 +9,6 @@ from actors import Person
 from panda3d.core import loadPrcFile, Point2D, Point3, DirectionalLight, Vec3, AmbientLight, Vec4, Material, VBase4
 from pandac.PandaModules import AntialiasAttrib, TransparencyAttrib
 from direct.gui.OnscreenText import OnscreenText
-import environment
 import sys
 
 class Tile(GeomNode):

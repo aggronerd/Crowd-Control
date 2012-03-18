@@ -1,7 +1,10 @@
+from direct.showbase import ElementTree
+
 __author__ = 'greg'
 
 from panda3d.core import GeomVertexData, GeomVertexFormat, GeomVertexWriter, Geom
 from panda3d.core import GeomLinestrips, GeomNode, GeomTriangles, GeomEnums, Triangulator
+import elementtree.ElementTree
 
 class Polygon(GeomNode):
 
@@ -52,3 +55,18 @@ class Polygon(GeomNode):
 			i+=1
 
 		self.addGeom(self.geom)
+
+class Level(object):
+
+	tilesets = []
+	layers = []
+
+	def load(self, filename):
+		doc = ElementTree.parse(filename)
+		assert doc.getroot().get
+
+class WallTile(object):
+	pass
+
+class Tile(object):
+	pass
